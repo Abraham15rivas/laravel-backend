@@ -17,9 +17,9 @@ class CreateGuestsTable extends Migration
             $table->id();
             $table->string('name');
             $table->string('last_name');
-            $table->integer('ci')->unique();
+            $table->integer('ci');
             $table->integer('age');
-            $table->integer('number_phone');
+            $table->bigInteger('number_phone');
             $table->text('address')->nullable();
             $table->unsignedBigInteger('user_id')->nullable();
             $table->foreign('user_id')->references('id')->on('users')->onUpdate('cascade')->onDelete('cascade');

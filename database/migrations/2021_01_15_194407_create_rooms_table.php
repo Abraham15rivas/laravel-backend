@@ -19,8 +19,10 @@ class CreateRoomsTable extends Migration
             $table->integer('number_floor');
             $table->integer('number_room');
             $table->enum('status', ['disponible', 'inactivo', 'mantenimiento', 'ocupado', 'reservado']);
-            $table->unsignedBigInteger('room_type_id')->nullable();
+            $table->unsignedBigInteger('room_type_id');
             $table->foreign('room_type_id')->references('id')->on('room_types')->onUpdate('cascade')->onDelete('cascade');
+            $table->unsignedBigInteger('hotel_id');
+            $table->foreign('hotel_id')->references('id')->on('hotels')->onUpdate('cascade')->onDelete('cascade');
             $table->timestamps();
         });
     }
