@@ -36,7 +36,7 @@ class AuthController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => 'Successfully created user!',
+            'message' => '!Usuario creado correctamente!',
             'access_token' => $tokenResult->accessToken,
             'token_type' => 'Bearer',
             'expires_at' => Carbon::parse($token->expires_at)->toDateTimeString()
@@ -74,7 +74,7 @@ class AuthController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => 'Successfully login!',
+            'message' => '¡Logeado correctamente!',
             'access_token' => $tokenResult->accessToken,
             'token_type' => 'Bearer',
             'expires_at' => Carbon::parse($token->expires_at)->toDateTimeString()
@@ -90,7 +90,7 @@ class AuthController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => 'Successfully logged out'
+            'message' => '¡Sesión cerrada correctamente!'
         ], 200);
     }
 }
