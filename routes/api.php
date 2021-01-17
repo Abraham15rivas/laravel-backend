@@ -3,17 +3,6 @@
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
-/*
-|--------------------------------------------------------------------------
-| API Routes
-|--------------------------------------------------------------------------
-|
-| Here is where you can register API routes for your application. These
-| routes are loaded by the RouteServiceProvider within a group which
-| is assigned the "api" middleware group. Enjoy building your API!
-|
-*/
-
 // Autenticación
 Route::group([
     'prefix' => 'auth',
@@ -59,13 +48,6 @@ Route::group([
         Route::put('/update/{id?}', 'RoomController@update');
         Route::delete('/{id?}', 'RoomController@destroy');
     });
-});
-// Rutas compartidas
-Route::group([
-    'prefix' => 'general',
-    'namespace' => 'General',
-    'middleware' => ['auth:api']
-], function () {
     // CRUD - Clientes (Huéspedes)
     Route::group(['prefix' => 'guests'], function () {
         Route::get('/', 'GuestController@index');
@@ -74,14 +56,7 @@ Route::group([
         Route::put('/update/{id?}', 'GuestController@update');
         Route::delete('/{id?}', 'GuestController@destroy');
     });
-});
-// Rutas del cliente o huésped
-Route::group([
-    'prefix' => 'guest',
-    'namespace' => 'Guest',
-    'middleware' => ['auth:api']
-], function () {
-    // Rutas de reservaciones cliente
+    // Rutas de reservaciones de habitaciones (Admin)
     Route::group(['prefix' => 'reservations'], function () {
         Route::get('/', 'ReservationController@index');
         Route::post('/store', 'ReservationController@store');
@@ -90,4 +65,24 @@ Route::group([
         Route::delete('/{id?}', 'ReservationController@destroy');
     });
 });
-
+// Rutas del cliente o huésped
+Route::group([
+    'prefix' => 'client',
+    'namespace' => 'Guest',
+    'middleware' => ['auth:api', 'guest_client']
+], function () {
+    // CRUD - Clientes (Huéspedes)
+    Route::group(['prefix' => 'guests'], function () {
+        Route::post('/store', 'GuestController@store');
+        Route::get('/{id?}', 'GuestController@show');
+        Route::put('/update/{id?}', 'GuestController@update');
+    });
+    // Rutas de reservaciones de habitaciones (Client)
+    Route::group(['prefix' => 'reservations'], function () {
+        Route::get('/', 'ReservationController@index');
+        Route::post('/store', 'ReservationController@store');
+        Route::get('/{id?}', 'ReservationController@show');
+        Route::put('/update/{id?}', 'ReservationController@update');
+        Route::delete('/{id?}', 'ReservationController@destroy');
+    });    
+});

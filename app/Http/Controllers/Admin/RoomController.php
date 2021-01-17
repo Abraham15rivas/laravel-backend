@@ -16,7 +16,7 @@ class RoomController extends Controller
      */
     public function index()
     {
-        $rooms = Room::latest()->get()->load('roomType', 'hotel');
+        $rooms = Room::latest()->get()->load('roomType', 'hotel', 'roomsReservations');
         return response([
             'success' => true,
             'total_rooms' => $rooms->count(),
@@ -102,9 +102,9 @@ class RoomController extends Controller
      */
     public function destroy($id)
     {
-        $room = Room::findOrFail($id);
-        $room->delete();
+        $room = Room::whereId($id)->first();
         if ($room) {
+            $room->delete();
             return response()->json([
                 'success' => true,
                 'message' => '¡habitacón borrado correctamente!',

@@ -18,7 +18,7 @@ class CreateRoomsTable extends Migration
             $table->string('code')->unique();
             $table->integer('number_floor');
             $table->integer('number_room');
-            $table->enum('status', ['disponible', 'inactivo', 'mantenimiento', 'ocupado', 'reservado']);
+            $table->enum('status', ['disponible', 'inactivo', 'mantenimiento', 'ocupado']);
             $table->unsignedBigInteger('room_type_id');
             $table->foreign('room_type_id')->references('id')->on('room_types')->onUpdate('cascade')->onDelete('cascade');
             $table->unsignedBigInteger('hotel_id');
