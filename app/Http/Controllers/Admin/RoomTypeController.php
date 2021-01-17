@@ -105,9 +105,9 @@ class RoomTypeController extends Controller
      */
     public function destroy($id)
     {
-        $type_room = RoomType::findOrFail($id);
-        $type_room->delete();
+        $type_room = RoomType::whereId($id)->first();
         if ($type_room) {
+            $type_room->delete();
             return response()->json([
                 'success' => true,
                 'message' => '¡tipo de habitacón borrado correctamente!',

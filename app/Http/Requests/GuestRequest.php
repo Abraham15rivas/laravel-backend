@@ -29,7 +29,8 @@ class GuestRequest extends FormRequest
             'age'           => 'required|integer', 
             'number_phone'  => 'required|integer', 
             'address'       => 'nullable|string',
-            'user_id'       => 'nullable|integer'
+            'user_id'       => 'nullable|integer',
+            'ci'            => 'required|integer'
         ];
     }
 
@@ -44,7 +45,6 @@ class GuestRequest extends FormRequest
             'last_name.max'         => 'El nombre debe ser máximo 199 caracteres',
             'ci.required'           => 'Añade una identificacion',
             'ci.integer'            => 'Debe ser numerico',
-            'ci.unique'             => 'No puede estar duplicada',
             'number_phone.required' => 'Añade un numero de contacto',
             'number_phone.integer'  => 'Debe ser numerico'
         ];

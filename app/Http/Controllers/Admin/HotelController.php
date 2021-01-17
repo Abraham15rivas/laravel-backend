@@ -105,9 +105,9 @@ class HotelController extends Controller
      */
     public function destroy($id)
     {
-        $hotel = Hotel::findOrFail($id);
-        $hotel->delete();
+        $hotel = Hotel::whereId($id)->first();
         if ($hotel) {
+            $hotel->delete();
             return response()->json([
                 'success' => true,
                 'message' => '¡Hotel borrado correctamente!',

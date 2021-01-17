@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\General;
+namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
@@ -79,8 +79,9 @@ class GuestController extends Controller
      */
     public function show($id)
     {
-        $guest = Guest::whereId($id)->first()->load('user');
+        $guest = Guest::whereId($id)->first();
         if ($guest) {
+            $guest->load('user');
             return response()->json([
                 'success' => true,
                 'message' => "¡Detalles del huésped: $guest->name!",
@@ -138,9 +139,9 @@ class GuestController extends Controller
      */
     public function destroy($id)
     {
-        $guest = Guest::findOrFail($id);
-        $guest->delete();
+        $guest = Guest::whereId($id)->first();
         if ($guest) {
+            $guest->delete();
             return response()->json([
                 'success' => true,
                 'message' => '¡Huésped borrado correctamente!',

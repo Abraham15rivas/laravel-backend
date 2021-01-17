@@ -27,7 +27,7 @@ class RoomRequest extends FormRequest
             'code'          => 'required|string|min:1|max:199',
             'number_floor'  => 'required|integer',
             'number_room'   => 'required|integer', 
-            'status'        => 'required|in:disponible,inactivo,mantenimiento,ocupado,reservado', 
+            'status'        => 'required|in:disponible,inactivo,mantenimiento,ocupado', 
             'room_type_id'  => 'required|integer',
             'hotel_id'      =>  'required|integer'
         ];

@@ -13,7 +13,7 @@ class ReservationRequest extends FormRequest
      */
     public function authorize()
     {
-        return false;
+        return true;
     }
 
     /**
@@ -22,9 +22,29 @@ class ReservationRequest extends FormRequest
      * @return array
      */
     public function rules()
+    { 
+        return [
+            'start_date'  => 'required|date', 
+            'finish_date' => 'required|date',
+            'amount_room' => 'required|integer', 
+            'total_price' => 'required|integer', 
+            'guest_id'    => 'required|integer'
+        ];
+    }
+
+    public function messages()
     {
         return [
-            //
+            'start_date.required'   => 'El nombre es obligatorio.',
+            'finish_date.required'  => 'El nombre es obligatorio.',
+            'start_date.date'       => 'Debe ser un formato de fecha valido',
+            'finish_date.date'      => 'Debe ser un formato de fecha valido',
+            'amount_room.required'  => 'Añade una cantidad',
+            'amount_room.integer'   => 'Debe ser numerico',
+            'total_price.required'  => 'Añade un precio',
+            'total_price.integer'   => 'Debe ser numerico',
+            'guest_id.required'     => 'Añade un id valido',
+            'guest_id.integer'      => 'Debe ser numerico'
         ];
     }
 }

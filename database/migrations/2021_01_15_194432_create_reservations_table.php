@@ -20,7 +20,7 @@ class CreateReservationsTable extends Migration
             $table->integer('amount_room');
             $table->double('total_price', 15, 2);
             $table->enum('status', ['activo', 'cancelado', 'finalizado']);
-            $table->unsignedBigInteger('guest_id')->nullable();
+            $table->unsignedBigInteger('guest_id');
             $table->foreign('guest_id')->references('id')->on('guests')->onUpdate('cascade')->onDelete('cascade');
             $table->timestamps();
         });
