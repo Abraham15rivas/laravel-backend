@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use App\{Reservation, Room};
 use Illuminate\Support\Facades\DB;
 use App\Http\Requests\ReservationRequest;
+use Carbon\Carbon;
 
 class ReservationController extends Controller
 {
@@ -17,7 +18,13 @@ class ReservationController extends Controller
      */
     public function index()
     {
-        $reservations = Reservation::latest()->get()->load('guest', 'reservationsRooms');
+        $reservations = Reservation::latest()->get()->load(
+            'guest', 
+            'reservationsRooms',
+            'reservationsRooms',
+            'reservationsRooms.hotel',
+            'reservationsRooms.roomType'
+        );
         foreach ($reservations as $reservation) {
             $reservation->total_reservations_rooms = $reservation->reservationsRooms->count();
         }
@@ -42,6 +49,8 @@ class ReservationController extends Controller
             $not_available = collect();
             $available = collect();
             $no_register = collect();
+            $price_days = 0;
+            $days_requested = 0;
 
             $reservation = new Reservation();
             $reservation->start_date = $request->start_date;
@@ -55,7 +64,7 @@ class ReservationController extends Controller
                 if ($room_selected) {
                     if ($room_selected->status === 'disponible') {
                         $room_selected->update(['status' => 'ocupado']);
-                        $reservation->total_price += $room_selected->roomType->price_day;
+                        $price_days += $room_selected->roomType->price_day;
                         $available->push($room);
                     } else {
                         $not_available->push($room);
@@ -64,6 +73,11 @@ class ReservationController extends Controller
                     $no_register->push($room);
                 }             
             }
+
+            $from_date = Carbon::parse($request->start_date);
+            $until_date = Carbon::parse($request->finish_date);
+            $days_requested = $until_date->diffInDays($from_date);
+            $reservation->total_price = $days_requested * $price_days;
 
             if ($not_available->count() == count($request->rooms_selected)) {
                 return response()->json([
@@ -145,6 +159,8 @@ class ReservationController extends Controller
         $not_available = collect();
         $available = collect();
         $no_register = collect();
+        $price_days = 0;
+        $days_requested = 0;
 
         $reservation = Reservation::whereId($request->id)->first();        
         if (!$reservation) {
@@ -173,7 +189,7 @@ class ReservationController extends Controller
             if ($room_selected) {
                 if ($room_selected->status === 'disponible') {
                     $room_selected->update(['status' => 'ocupado']);
-                    $reservation->total_price += $room_selected->roomType->price_day;
+                    $price_days += $room_selected->roomType->price_day;
                     $reservation->amount_room ++;
                     $available->push($room);
                 } else {
@@ -183,6 +199,11 @@ class ReservationController extends Controller
                 $no_register->push($room);
             }
         }
+
+        $from_date = Carbon::parse($request->start_date);
+        $until_date = Carbon::parse($request->finish_date);
+        $days_requested = $until_date->diffInDays($from_date);
+        $reservation->total_price = $days_requested * $price_days;
 
         $reservation->reservationsRooms()->sync($available->toArray());
         $reservation->save();
@@ -218,6 +239,12 @@ class ReservationController extends Controller
     {
         $reservation = Reservation::whereId($id)->first();
         if ($reservation) {
+            foreach ($reservation->reservationsRooms as $room) {
+                $room_selected = Room::whereId($room->id)->first();
+                if ($room_selected->status != 'disponible') {
+                    $room_selected->update(['status' => 'disponible']);
+                }
+            }
             $reservation->delete();
             return response()->json([
                 'success' => true,

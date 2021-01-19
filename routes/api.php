@@ -84,5 +84,9 @@ Route::group([
         Route::get('/{id?}', 'ReservationController@show');
         Route::put('/update/{id?}', 'ReservationController@update');
         Route::delete('/{id?}', 'ReservationController@destroy');
-    });    
+    });
+    // Habitaciones disponibles
+    Route::group(['prefix' => 'rooms'], function () {
+        Route::get('/', 'RoomController@index');
+    });
 });
