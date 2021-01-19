@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use App\{Reservation, User, Room};
 use Illuminate\Support\Facades\DB;
 use App\Http\Requests\ReservationRequest;
+use Carbon\Carbon;
 
 class ReservationController extends Controller
 {
@@ -17,14 +18,23 @@ class ReservationController extends Controller
      */
     public function index()
     {
-        $id = auth()->user()->id;
-        $reservations = User::whereId($id)->latest()->get()->load('guest', 'guest.reservations', 'guest.reservations.reservationsRooms');
-        foreach ($reservations as $reservation) {
-            $total_reservations = $reservation->guest->reservations->count();
+        $guest = auth()->user()->guest;
+        if ($guest == null || empty($guest->reservations)) {
+            return response([
+                'success' => false,
+                'message' => 'Debe registra sus datos de huésped',
+            ], 400);
         }
+        $reservations = $guest->load(
+            'user', 
+            'reservations', 
+            'reservations.reservationsRooms',
+            'reservations.reservationsRooms.hotel',
+            'reservations.reservationsRooms.roomType'
+        );
         return response([
             'success' => true,
-            'total_reservations' => $total_reservations,
+            'total_reservations' => $reservations->reservations->count(),
             'message' => 'Lista de las reservaciones',
             'data' => $reservations
         ], 200);
@@ -38,17 +48,25 @@ class ReservationController extends Controller
      */
     public function store(ReservationRequest $request)
     {
-        $id = auth()->user()->guest->id;
+        $guest = auth()->user()->guest;
+        if ($guest == null) {
+            return response([
+                'success' => false,
+                'message' => 'Debe registra sus datos de huésped',
+            ], 400);
+        }
         DB::beginTransaction();
         try{
             $not_available = collect();
             $available = collect();
             $no_register = collect();
+            $price_days = 0;
+            $days_requested = 0;
 
             $reservation = new Reservation();
             $reservation->start_date = $request->start_date;
             $reservation->finish_date = $request->finish_date;
-            $reservation->guest_id = $id;
+            $reservation->guest_id = $guest->id;
             $reservation->status = 'activo';
             $reservation->total_price = 0;
 
@@ -57,7 +75,7 @@ class ReservationController extends Controller
                 if ($room_selected) {
                     if ($room_selected->status === 'disponible') {
                         $room_selected->update(['status' => 'ocupado']);
-                        $reservation->total_price += $room_selected->roomType->price_day;
+                        $price_days += $room_selected->roomType->price_day;
                         $available->push($room);
                     } else {
                         $not_available->push($room);
@@ -66,6 +84,11 @@ class ReservationController extends Controller
                     $no_register->push($room);
                 }             
             }
+
+            $from_date = Carbon::parse($request->start_date);
+            $until_date = Carbon::parse($request->finish_date);
+            $days_requested = $until_date->diffInDays($from_date);
+            $reservation->total_price = $days_requested * $price_days;
 
             if ($not_available->count() == count($request->rooms_selected)) {
                 return response()->json([
@@ -124,7 +147,7 @@ class ReservationController extends Controller
                 return $q->whereId($id)->get();
             }, 'guest.reservations.reservationsRooms']);
 
-        if ($reservation->guest->reservations->count() > 0) {
+        if ($reservation->guest != null && $reservation->guest->reservations->count() > 0) {
             return response()->json([
                 'success' => true,
                 'message' => "¡Detalles de reservación de habitaciones!",
@@ -151,6 +174,8 @@ class ReservationController extends Controller
         $not_available = collect();
         $available = collect();
         $no_register = collect();
+        $price_days = 0;
+        $days_requested = 0;
 
         $reservation = Reservation::whereId($request->id)->first();        
         if (!$reservation) {
@@ -178,7 +203,7 @@ class ReservationController extends Controller
             if ($room_selected) {
                 if ($room_selected->status === 'disponible') {
                     $room_selected->update(['status' => 'ocupado']);
-                    $reservation->total_price += $room_selected->roomType->price_day;
+                    $price_days += $room_selected->roomType->price_day;
                     $reservation->amount_room ++;
                     $available->push($room);
                 } else {
@@ -188,6 +213,11 @@ class ReservationController extends Controller
                 $no_register->push($room);
             }
         }
+
+        $from_date = Carbon::parse($request->start_date);
+        $until_date = Carbon::parse($request->finish_date);
+        $days_requested = $until_date->diffInDays($from_date);
+        $reservation->total_price = $days_requested * $price_days;
 
         $reservation->reservationsRooms()->sync($available->toArray());
         $reservation->save();
@@ -221,8 +251,21 @@ class ReservationController extends Controller
      */
     public function destroy($id)
     {
-        $reservation = auth()->user()->guest->reservations->where('id', $id)->first();
+        $guest = auth()->user()->guest;
+        if ($guest == null) {
+            return response([
+                'success' => false,
+                'message' => 'Debe registra sus datos de huésped',
+            ], 400);
+        }
+        $reservation = $guest->reservations->where('id', $id)->first();
         if ($reservation) {
+            foreach ($reservation->reservationsRooms as $room) {
+                $room_selected = Room::whereId($room->id)->first();
+                if ($room_selected->status != 'disponible') {
+                    $room_selected->update(['status' => 'disponible']);
+                }
+            }
             $reservation->delete();
             return response()->json([
                 'success' => true,

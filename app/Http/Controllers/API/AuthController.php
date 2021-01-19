@@ -18,15 +18,14 @@ class AuthController extends Controller
             'name' => 'required|string',
             'email' => 'required|string|email|unique:users',
             'password' => 'required|string',
-            'c_password' => 'required|same:password',
-            'role_id' => 'required|int'
+            'c_password' => 'required|same:password'
         ]);
 
         $user = User::create([
             'name' => $request->name,
             'email' => $request->email,
             'password' => bcrypt($request->password),
-            'role_id' => $request->role_id
+            'role_id' => 2
         ]);
 
         $tokenResult = $user->createToken('Personal Access Token');
